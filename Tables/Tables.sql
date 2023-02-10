@@ -8,7 +8,8 @@ create table dbo.Tables
             references dbo.Schemas
             on delete cascade,
     Name       varchar(256)  not null,
-    WithAudits bit default 1 not null
+    WithAudits bit default 1 not null,
+    AlterDate Datetime2 default getdate() not null
 )
 go
 

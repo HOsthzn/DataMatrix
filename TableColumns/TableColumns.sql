@@ -18,7 +18,8 @@ create table dbo.TableColumns
     IsForeignKey          bit default 0 not null,
     IsForeignDisplayValue bit default 0 not null,
     OrdinalPosition       int           not null,
-    DisplayInGrid         bit default 0 not null
+    DisplayInGrid         bit default 0 not null,
+    AlterDate Datetime2 default getdate() not null
 )
 go
 

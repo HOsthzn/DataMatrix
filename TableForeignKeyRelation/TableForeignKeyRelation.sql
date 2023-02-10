@@ -9,7 +9,8 @@ create table dbo.TableForeignKeyRelation
             references dbo.TableColumns,
     PrimaryColumnId nvarchar(128) not null
         constraint TableForeignKeyRelation_PrimaryTableColumns_Id_fk
-            references dbo.TableColumns
+            references dbo.TableColumns,
+    AlterDate Datetime2 default getdate() not null
 )
 go
 

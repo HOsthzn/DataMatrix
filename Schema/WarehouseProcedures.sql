@@ -21,10 +21,6 @@ AS
 BEGIN
     If dbo.SchemaExists(@Name) = 0
         begin
-
-            DECLARE @CurrentDate DATETIME2 = SYSDATETIME();
-            DECLARE @Id UNIQUEIDENTIFIER = NEWID();
-
             begin try
                 DECLARE @SQL NVARCHAR(MAX) = N'CREATE SCHEMA @SchemaName';
                 EXEC sp_executesql @SQL, N'@SchemaName VARCHAR(256)', @Name;
@@ -56,7 +52,6 @@ END
     BEGIN
         If dbo.SchemaExists(@CurrentName) = 1
             begin
-                DECLARE @CurrentDate DATETIME2 = SYSDATETIME();
                 DECLARE @Id UNIQUEIDENTIFIER;
 
                 SELECT @Id = Id
@@ -96,7 +91,6 @@ AS
 BEGIN
     If dbo.SchemaExists(@Name) = 1
         begin
-            DECLARE @CurrentDate DATETIME2 = SYSDATETIME();
             DECLARE @Id UNIQUEIDENTIFIER;
 
             SELECT @Id = Id

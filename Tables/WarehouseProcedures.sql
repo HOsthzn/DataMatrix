@@ -1,8 +1,8 @@
-CREATE FUNCTION dbo.TableExists(@SchemaId nvarchar(128), @TableName varchar(256))
+CREATE OR ALTER FUNCTION dbo.SysTableExists(@SchemaId NVARCHAR(128), @TableName VARCHAR(256))
     RETURNS BIT
 AS
 BEGIN
-    DECLARE @SchemaName varchar(256)
+    DECLARE @SchemaName VARCHAR(256)
 
     SELECT @SchemaName = Name
     FROM dbo.Schemas
@@ -11,151 +11,68 @@ BEGIN
     IF EXISTS(SELECT 1
               FROM sys.tables
               WHERE name = @TableName
-                AND schema_name(schema_id) = @SchemaName)
+                AND SCHEMA_NAME(schema_id) = @SchemaName)
         BEGIN
             RETURN 1
         END
-    ELSE
-        BEGIN
-            RETURN 0
-        END
+    RETURN 0
 END
+GO
 
-CREATE PROCEDURE dbo.CreateTable(
-    @SchemaId nvarchar(128),
-    @Name varchar(256),
-    @WithAudits bit = 1
+
+
+CREATE OR ALTER PROCEDURE dbo.CreateTable(
+    @SchemaId NVARCHAR(128),
+    @Name VARCHAR(256)
 )
 AS
 BEGIN
-    if dbo.TableExists(@SchemaId, @Name) = 0
-        begin
-            DECLARE @SchemaName varchar(256);
-            SELECT @SchemaName = Name FROM dbo.Schemas WHERE Id = @SchemaId;
-
-            DECLARE @SQL nvarchar(MAX);
-            SET @SQL = N'CREATE TABLE [' + @SchemaName + N'].[' + @Name +
-                       N']([Id] int identity constraint ' + @SchemaName + '_' + @Name +
-                       '_Id_pk primary key);';
-
-            BEGIN TRY
-                EXEC sp_executesql @SQL, N'@SchemaName nvarchar(256), @Name nvarchar(256)', @SchemaName, @Name;
-
-                IF @WithAudits = 1
-                    BEGIN
-                        DECLARE @SQL_Audit nvarchar(MAX);
-                        SET @SQL_Audit = N'CREATE TABLE [' + @SchemaName + N'_Audit].[' + @Name +
-                                         N']([Id] int identity constraint ' + @SchemaName + '_' + @Name +
-                                         '_Id_pk primary key, Action varchar(256), Date datetime2);';
-
-                        EXEC sp_executesql @SQL_Audit, N'@SchemaName nvarchar(256), @Name nvarchar(256)', @SchemaName,
-                             @Name;
-                    END
-
-                EXEC dbo.InsertTable @SchemaId, @Name, @WithAudits;
-            END TRY
-            BEGIN CATCH
-                DECLARE @errorMessage NVARCHAR(4000);
-                DECLARE @errorSeverity INT;
-                DECLARE @errorState INT;
-
-                SELECT @errorMessage = ERROR_MESSAGE()
-                     , @errorSeverity = ERROR_SEVERITY()
-                     , @errorState = ERROR_STATE();
-
-                RAISERROR (@errorMessage, @errorSeverity, @errorState);
-            END CATCH
-        end
+    IF dbo.SysTableExists(@SchemaId, @Name) = 0
+        BEGIN
+            DECLARE @SchemaName VARCHAR(256);
+            SELECT @SchemaName = Name
+            FROM dbo.Schemas
+            WHERE Id = @SchemaId
+            DECLARE @sql NVARCHAR(MAX) = N'CREATE TABLE [' + @SchemaName + '].[' + @Name +
+                                         '] (Id INT NOT NULL CONSTRAINT ' + @SchemaName + '_' + @Name +
+                                         '_pk PRIMARY KEY)';
+            EXEC [dbo].[ExecuteDynamicSQL] @sql;
+        END
 END
-    CREATE PROCEDURE dbo.RenameTable(@SchemaId nvarchar(128), @CurrentName varchar(256), @NewName varchar(256))
-    AS
-    BEGIN
-        IF dbo.TableExists(@SchemaId, @CurrentName) = 1
-            BEGIN
-                DECLARE @SchemaName varchar(256), @WithAudits bit;
-
-                SELECT @SchemaName = Name
-                FROM dbo.Schemas
-                WHERE Id = @SchemaId;
-
-                SELECT @WithAudits = WithAudits
-                FROM dbo.Tables
-                WHERE Name = @CurrentName
-                  AND SchemaId = @SchemaId;
-
-                DECLARE @SQL NVARCHAR(MAX);
-                SET @SQL = N'EXEC sp_rename @objname = N''' + @SchemaName + N'.' + @CurrentName + ''', @newname = N''' +
-                           @NewName + ''';';
-
-                begin try
-                    EXEC sp_executesql @SQL, N'@objname nvarchar(512), @newname nvarchar(512)',
-                         @SchemaName + N'.' + @CurrentName, @NewName;
-
-                    -- Also rename the Audit table if the WithAudits field is set to true
-                    IF @WithAudits = 1
-                        BEGIN
-                            DECLARE @SQL_Audit NVARCHAR(MAX);
-                            SET @SQL_Audit = N'EXEC sp_rename @objname = N''' + @SchemaName + '_Audit.' + @CurrentName +
-                                             ''', @newname = N''' + @NewName + '_Audit'';';
-                            EXEC sp_executesql @SQL_Audit, N'@objname nvarchar(512), @newname nvarchar(512)',
-                                 @SchemaName + '_Audit.' + @CurrentName, @NewName + '_Audit';
-                        END
-
-                    EXEC dbo.UpdateTableName @CurrentName, @NewName;
-                END TRY
-                BEGIN CATCH
-                    DECLARE @errorMessage NVARCHAR(4000);
-                    DECLARE @errorSeverity INT;
-                    DECLARE @errorState INT;
-
-                    SELECT @errorMessage = ERROR_MESSAGE()
-                         , @errorSeverity = ERROR_SEVERITY()
-                         , @errorState = ERROR_STATE();
-
-                    RAISERROR (@errorMessage, @errorSeverity, @errorState);
-                END CATCH
-            END
-    END
 GO
 
-CREATE PROCEDURE dbo.DropTable(@SchemaId nvarchar(128), @Id nvarchar(128))
+CREATE OR ALTER PROCEDURE dbo.RenameTable(@TableId VARCHAR(256), @NewName VARCHAR(256))
 AS
 BEGIN
-    Declare @TableName varchar(256), @WithAudits bit;
-    select @WithAudits = WithAudits, @TableName = Name from dbo.Tables where Id = @Id;
-    if @TableName is not null
+    DECLARE @SchemaName VARCHAR(256), @SchemaId NVARCHAR(128), @OldName VARCHAR(256);
+    SELECT @SchemaName = S.Name
+         , @SchemaId = T.SchemaId
+         , @OldName = T.Name
+    FROM dbo.Tables AS T
+             INNER JOIN Schemas AS S ON S.Id = T.SchemaId
+
+    IF dbo.SysTableExists(@SchemaId, @NewName) = 0
         BEGIN
-            DECLARE @SchemaName varchar(256);
-            SELECT @SchemaName = Name FROM dbo.Schemas WHERE Id = @SchemaId;
+            DECLARE @sql NVARCHAR(MAX) = N'EXEC sp_rename ''' + @SchemaName + '.' + @OldName + ''', ''' + @NewName +
+                                         '''';
+            EXEC [dbo].[ExecuteDynamicSQL] @sql;
+        END
+END
+GO
 
-            DECLARE @SQL NVARCHAR(MAX) = N'DROP TABLE [' + @SchemaName + N'].[' + @TableName + N'];';
-
-            begin try
-                -- Drop the table
-                EXEC sp_executesql @SQL, N'@SchemaName varchar(256), @TableName varchar(256)', @SchemaName, @TableName;
-
-                -- Also drop the Audit table if the WithAudits field is set to true
-                IF @WithAudits = 1
-                    begin
-                        DECLARE @SQL_Audit NVARCHAR(MAX) = N'DROP TABLE [' + @SchemaName + N'_Audit].[' + @TableName + N'];';
-                        EXEC sp_executesql @SQL_Audit, N'@SchemaName varchar(256), @TableName varchar(256)',
-                             @SchemaName,
-                             @TableName;
-                    end
-
-                exec dbo.DeleteTable @Id;
-            END TRY
-            BEGIN CATCH
-                DECLARE @errorMessage NVARCHAR(4000);
-                DECLARE @errorSeverity INT;
-                DECLARE @errorState INT;
-
-                SELECT @errorMessage = ERROR_MESSAGE()
-                     , @errorSeverity = ERROR_SEVERITY()
-                     , @errorState = ERROR_STATE();
-
-                RAISERROR (@errorMessage, @errorSeverity, @errorState);
-            END CATCH
+CREATE OR ALTER PROCEDURE dbo.DropTable(@TableId NVARCHAR(128))
+AS
+BEGIN
+    DECLARE @SchemaName VARCHAR(256), @SchemaId NVARCHAR(128), @TableName VARCHAR(256);
+    SELECT @SchemaName = S.Name
+         , @SchemaId = T.SchemaId
+         , @TableName = T.Name
+    FROM dbo.Tables AS T
+             INNER JOIN Schemas AS S ON S.Id = T.SchemaId
+    IF dbo.SysTableExists(@SchemaId, @TableName) = 0
+        BEGIN
+            DECLARE @sql NVARCHAR(MAX) = N'DROP TABLE [' + @SchemaName + '].[' + @TableName + ']';
+            EXEC [dbo].[ExecuteDynamicSQL] @sql;
         END
 END
 GO

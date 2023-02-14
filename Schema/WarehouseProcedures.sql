@@ -1,4 +1,5 @@
-CREATE FUNCTION dbo.SchemaExists(@SchemaName varchar(256))
+-- Check if the schema already exists
+CREATE OR ALTER FUNCTION dbo.SysSchemaExists(@SchemaName VARCHAR(256))
     RETURNS BIT
 AS
 BEGIN
@@ -8,116 +9,62 @@ BEGIN
         BEGIN
             RETURN 1
         END
-    ELSE
-        BEGIN
-            RETURN 0
-        END
+    RETURN 0
 END
+GO
 
-CREATE PROCEDURE dbo.CreateSchema(
+
+
+-- Create a new schema
+CREATE OR ALTER PROCEDURE dbo.CreateSchema(
     @Name VARCHAR(256)
 )
 AS
 BEGIN
-    If dbo.SchemaExists(@Name) = 0
-        begin
-            begin try
-                DECLARE @SQL NVARCHAR(MAX) = N'CREATE SCHEMA @SchemaName';
-                EXEC sp_executesql @SQL, N'@SchemaName VARCHAR(256)', @Name;
-
-                -- Also create an Audit schema
-                DECLARE @SQL_Audit NVARCHAR(MAX) = N'CREATE SCHEMA @AuditSchemaName';
-                EXEC sp_executesql @SQL_Audit, N'@AuditSchemaName VARCHAR(256)', @Name + '_Audit';
-
-                exec dbo.InsertSchema @Name;
-            END TRY
-            BEGIN CATCH
-                DECLARE @errorMessage NVARCHAR(4000);
-                DECLARE @errorSeverity INT;
-                DECLARE @errorState INT;
-
-                SELECT @errorMessage = ERROR_MESSAGE()
-                     , @errorSeverity = ERROR_SEVERITY()
-                     , @errorState = ERROR_STATE();
-
-                RAISERROR (@errorMessage, @errorSeverity, @errorState);
-            END CATCH
-        end
+    IF dbo.SysSchemaExists(@Name) = 0
+        BEGIN
+            DECLARE @sql NVARCHAR(MAX) = 'CREATE SCHEMA [' + @Name + ']';
+            EXEC dbo.ExecuteDynamicSQL @sql;
+        END
 END
-    CREATE PROCEDURE dbo.RenameSchema(
-        @CurrentName VARCHAR(256),
-        @NewName VARCHAR(256)
-    )
-    AS
-    BEGIN
-        If dbo.SchemaExists(@CurrentName) = 1
-            begin
-                DECLARE @Id UNIQUEIDENTIFIER;
+GO
 
-                SELECT @Id = Id
-                FROM dbo.Schemas
-                WHERE Name = @CurrentName;
-
-                begin try
-                    DECLARE @SQL NVARCHAR(MAX) = N'ALTER SCHEMA @CurrentName TRANSFER @NewName';
-                    EXEC sp_executesql @SQL, N'@CurrentName VARCHAR(256), @NewName VARCHAR(256)', @CurrentName,
-                         @NewName;
-
-                    -- Also update the Audit schema
-                    DECLARE @SQL_Audit NVARCHAR(MAX) = N'ALTER SCHEMA @CurrentName_Audit TRANSFER @NewName_Audit';
-                    EXEC sp_executesql @SQL_Audit, N'@CurrentName_Audit VARCHAR(512), @NewName_Audit VARCHAR(512)',
-                         @CurrentName + '_Audit', @NewName + '_Audit';
-
-                    exec dbo.UpdateSchema @Id, @NewName;
-                END TRY
-                BEGIN CATCH
-                    DECLARE @errorMessage NVARCHAR(4000);
-                    DECLARE @errorSeverity INT;
-                    DECLARE @errorState INT;
-
-                    SELECT @errorMessage = ERROR_MESSAGE()
-                         , @errorSeverity = ERROR_SEVERITY()
-                         , @errorState = ERROR_STATE();
-
-                    RAISERROR (@errorMessage, @errorSeverity, @errorState);
-                END CATCH
-            end
-    END
-go
-
-
-CREATE PROCEDURE dbo.DropSchema(@Name VARCHAR(256))
+-- Rename a schema
+CREATE OR ALTER PROCEDURE dbo.RenameSchema(
+    @Id NVARCHAR(128),
+    @NewName VARCHAR(256)
+)
 AS
 BEGIN
-    If dbo.SchemaExists(@Name) = 1
-        begin
-            DECLARE @Id UNIQUEIDENTIFIER;
+    DECLARE @OldName VARCHAR(256);
 
-            SELECT @Id = Id
-            FROM dbo.Schemas
-            WHERE Name = @Name;
+    SELECT @OldName = Name
+    FROM dbo.Schemas
+    WHERE Id = @Id;
 
-            begin try
-                DECLARE @SQL NVARCHAR(MAX) = N'DROP SCHEMA [' + @Name + ']';
-                EXEC sp_executesql @SQL;
+    IF @OldName IS NOT NULL AND @OldName <> @NewName AND dbo.SysSchemaExists(@NewName) = 1
+        BEGIN
+            DECLARE @sql NVARCHAR(MAX) = 'EXEC sys.sp_rename @objname = ''[' + @OldName + ']'', @newname = ''' +
+                                         @NewName + '''';
+            EXEC dbo.ExecuteDynamicSQL @sql;
+        END
+END
+GO
 
-                -- Also drop the Audit schema
-                DECLARE @SQL_Audit NVARCHAR(MAX) = N'DROP SCHEMA [' + @Name + '_Audit]';
-                EXEC sp_executesql @SQL_Audit;
+-- Drop a schema
+CREATE OR ALTER PROCEDURE dbo.DropSchema(@Id NVARCHAR(128))
+AS
+BEGIN
+    DECLARE @Name VARCHAR(256);
 
-                exec dbo.DeleteSchema @Id
-            END TRY
-            BEGIN CATCH
-                DECLARE @errorMessage NVARCHAR(4000);
-                DECLARE @errorSeverity INT;
-                DECLARE @errorState INT;
+    SELECT @Name = Name
+    FROM dbo.Schemas
+    WHERE Id = @Id;
 
-                SELECT @errorMessage = ERROR_MESSAGE()
-                     , @errorSeverity = ERROR_SEVERITY()
-                     , @errorState = ERROR_STATE();
-
-                RAISERROR (@errorMessage, @errorSeverity, @errorState);
-            END CATCH
-        end
+    IF dbo.SysSchemaExists(@Name) = 1
+        BEGIN
+            DECLARE @sql NVARCHAR(MAX) = 'DROP SCHEMA [' + @Name + ']';
+            EXEC dbo.ExecuteDynamicSQL @sql;
+        END
 END
 GO

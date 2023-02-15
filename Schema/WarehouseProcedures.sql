@@ -1,3 +1,6 @@
+USE DataMatrix
+GO
+
 -- Check if the schema already exists
 CREATE OR ALTER FUNCTION dbo.SysSchemaExists(@SchemaName VARCHAR(256))
     RETURNS BIT

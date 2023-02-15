@@ -1,3 +1,6 @@
+USE DataMatrix
+GO
+
 CREATE OR ALTER FUNCTION dbo.SysColumnExists(
     @TableId NVARCHAR(128),
     @ColumnName VARCHAR(256)

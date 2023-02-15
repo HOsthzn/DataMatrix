@@ -1,3 +1,6 @@
+USE DataMatrix
+GO
+
 -- Procedure to check if a table column exists
 CREATE OR ALTER FUNCTION dbo.TableColumnExists(@TableId NVARCHAR(128), @ColumnName NVARCHAR(256))
     RETURNS BIT

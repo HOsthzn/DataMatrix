@@ -1,3 +1,6 @@
+USE DataMatrix
+GO
+
 CREATE OR ALTER FUNCTION dbo.TableExists(@SchemaId NVARCHAR(128), @TableName NVARCHAR(256))
     RETURNS BIT
 AS

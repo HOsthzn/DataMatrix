@@ -54,7 +54,7 @@ AS
 BEGIN
     BEGIN TRANSACTION;
     DECLARE @CurrentDate DATETIME2 = SYSDATETIME();
-    EXEC dbo.CreateColumn;
+    EXEC dbo.CreateColumn @TableId, @Name, @DataTypeId, @DefaultValue, @NotNull;
     IF dbo.TableColumnExists(@TableId, @Name) = 0
         BEGIN
             INSERT INTO dbo.TableColumns ( Id, TableId, DataTypeId, Name, DefaultValue, NotNull, IsPrimaryKey
@@ -81,7 +81,7 @@ AS
 BEGIN
     BEGIN TRANSACTION ;
     DECLARE @CurrentDate DATETIME2 = SYSDATETIME();
-    EXEC dbo.RenameColumn;
+    EXEC dbo.AlterColumn @Id, @TableId, @Name, @DefaultValue, @DataTypeId, @NotNull;
     IF dbo.TableColumnExists(@TableId, @Name) = 1
         BEGIN
             UPDATE dbo.TableColumns

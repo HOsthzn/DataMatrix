@@ -54,7 +54,7 @@ BEGIN
     IF dbo.SysTableExists(@SchemaId, @NewName) = 0
         BEGIN
             DECLARE @sql NVARCHAR(MAX) = N'EXEC sp_rename ''' + @SchemaName + '.' + @OldName + ''', ''' + @NewName +
-                                         '''';
+                                         ''' , ''OBJECT'' ';
             EXEC [dbo].[ExecuteDynamicSQL] @sql;
         END
 END

@@ -45,7 +45,7 @@ BEGIN
     IF @OldName IS NOT NULL AND @OldName <> @NewName AND dbo.SysSchemaExists(@NewName) = 1
         BEGIN
             DECLARE @sql NVARCHAR(MAX) = 'EXEC sys.sp_rename @objname = ''[' + @OldName + ']'', @newname = ''' +
-                                         @NewName + '''';
+                                         @NewName + ''', ''DATABASE'';';
             EXEC dbo.ExecuteDynamicSQL @sql;
         END
 END

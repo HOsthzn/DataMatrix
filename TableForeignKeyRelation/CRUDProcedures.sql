@@ -47,7 +47,8 @@ BEGIN
 END
 GO
 
-CREATE OR ALTER PROCEDURE InsertTableForeignKeyRelation(@FromColumn NVARCHAR(128), @ToColumn NVARCHAR(128))
+CREATE OR ALTER PROCEDURE InsertTableForeignKeyRelation(@FromColumn NVARCHAR(128), @ToColumn NVARCHAR(128),
+                                                        @Id NVARCHAR(128) OUTPUT)
 AS
 BEGIN
     BEGIN TRANSACTION;
@@ -56,8 +57,10 @@ BEGIN
     -- TODO call CreateFK procedure
     IF dbo.ForeignKeyRelationExists(@Name) = 0
         BEGIN
+            SET @Id = NEWID();
+
             INSERT INTO dbo.TableForeignKeyRelation (Id, Name, ForeignColumnId, PrimaryColumnId, AlterDate)
-            VALUES (NEWID(), @Name, @FromColumn, @ToColumn, @CurrentDate)
+            VALUES (@Id, @Name, @FromColumn, @ToColumn, @CurrentDate)
         END
     COMMIT;
 END

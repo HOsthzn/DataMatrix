@@ -18,17 +18,20 @@ END
 GO
 
 CREATE OR ALTER PROCEDURE dbo.InsertSchema(
-    @Name VARCHAR(256)
+    @Name VARCHAR(256), @Id NVARCHAR(128) OUTPUT
 )
 AS
 BEGIN
     BEGIN TRANSACTION;
     DECLARE @CurrentDate DATETIME2 = SYSDATETIME();
     EXEC dbo.CreateSchema @Name;
+    EXEC dbo.CreateSchemaAudit @Name;
     IF dbo.SchemaExists(@Name) = 0
         BEGIN
+            SET @Id = NEWID();
+
             INSERT INTO dbo.Schemas (Id, Name, AlterDate)
-            VALUES (NEWID(), @Name, @CurrentDate)
+            VALUES (@Id, @Name, @CurrentDate)
         END
     COMMIT;
 END
@@ -42,7 +45,8 @@ AS
 BEGIN
     BEGIN TRANSACTION ;
     DECLARE @CurrentDate DATETIME2 = SYSDATETIME();
-    EXECUTE dbo.RenameSchema @Id, @Name;
+    EXEC dbo.RenameSchema @Id, @Name;
+    EXEC dbo.RenameSchemaAudit @Id, @Name;
     IF dbo.SchemaExists(@Name) = 0
         BEGIN
             UPDATE dbo.Schemas
@@ -60,7 +64,8 @@ CREATE OR ALTER PROCEDURE dbo.DeleteSchema(
 AS
 BEGIN
     BEGIN TRANSACTION;
-    EXECUTE dbo.DropSchema @Id;
+    EXEC dbo.DropSchema @Id;
+    EXEC dbo.DropSchemaAudit @Id;
     IF dbo.SchemaExists(@Id) = 0
         BEGIN
             DELETE

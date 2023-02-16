@@ -17,27 +17,30 @@ BEGIN
 END
 GO
 
--- Procedure to insert a table
 CREATE OR ALTER PROCEDURE dbo.InsertTable(
     @SchemaId NVARCHAR(128),
     @Name VARCHAR(256),
-    @WithAudits BIT = 1
+    @WithAudits BIT = 1,
+    @Id NVARCHAR(128) OUTPUT
 )
 AS
 BEGIN
     BEGIN TRANSACTION;
     DECLARE @CurrentDate DATETIME2 = SYSDATETIME();
-    EXECUTE dbo.CreateTable @SchemaId, @Name, @WithAudits;
+    EXECUTE dbo.CreateTable @SchemaId, @Name;
+    IF @WithAudits = 1
+        EXECUTE dbo.CreateTableAudit @SchemaId, @Name;
     IF dbo.TableExists(@SchemaId, @Name) = 0
         BEGIN
+            SET @Id = NEWID();
+
             INSERT INTO dbo.Tables (Id, SchemaId, Name, WithAudits, AlterDate)
-            VALUES (NEWID(), @SchemaId, @Name, @WithAudits, @CurrentDate);
+            VALUES (@Id, @SchemaId, @Name, @WithAudits, @CurrentDate);
         END
     COMMIT;
 END
 GO
 
--- Procedure to update a table
 CREATE OR ALTER PROCEDURE dbo.UpdateTable(
     @Id NVARCHAR(128),
     @SchemaId NVARCHAR(128),
@@ -49,6 +52,8 @@ BEGIN
     BEGIN TRANSACTION ;
     DECLARE @CurrentDate DATETIME2 = SYSDATETIME();
     EXEC dbo.RenameTable @Id, @Name;
+    IF @WithAudits = 1
+        EXEC dbo.RenameTableAudit @Id, @Name;
     IF dbo.TableExists(@SchemaId, @Name) = 1
         BEGIN
             UPDATE dbo.Tables
@@ -62,7 +67,6 @@ BEGIN
 END
 GO
 
--- Procedure to delete a table
 CREATE OR ALTER PROCEDURE dbo.DeleteTable(
     @SchemaId NVARCHAR(128), @Id NVARCHAR(128)
 )
@@ -70,6 +74,12 @@ AS
 BEGIN
     BEGIN TRANSACTION ;
     EXEC dbo.DropTable @Id;
+
+    DECLARE @WithAudits BIT = (SELECT WithAudits
+                               FROM dbo.Tables
+                               WHERE Id = @Id);
+    IF @WithAudits = 1
+        EXEC dbo.DropTableAudit @Id;
     IF dbo.TableExists(@SchemaId, @Id) = 1
         BEGIN
             DELETE

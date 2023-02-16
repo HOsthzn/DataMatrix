@@ -51,19 +51,28 @@ GO
 CREATE OR ALTER PROCEDURE dbo.InsertTableColumn(@TableId NVARCHAR(128), @DataTypeId NVARCHAR(128), @Name VARCHAR(256),
                                                 @DefaultValue NVARCHAR(MAX), @NotNull BIT = 0, @IsPrimaryKey BIT = 0,
                                                 @IsForeignKey BIT = 0, @IsForeignDisplayValue BIT = 0,
-                                                @DisplayInGrid BIT = 0
+                                                @DisplayInGrid BIT = 0, @Id NVARCHAR(128) OUTPUT
 )
 AS
 BEGIN
     BEGIN TRANSACTION;
-    DECLARE @CurrentDate DATETIME2 = SYSDATETIME();
+    DECLARE @CurrentDate DATETIME2 = SYSDATETIME(), @WithAudits BIT = 0;
     EXEC dbo.CreateColumn @TableId, @Name, @DataTypeId, @DefaultValue, @NotNull;
+
+    SELECT @WithAudits = WithAudits FROM Tables WHERE Id = @TableId
+    IF @WithAudits = 1
+        BEGIN
+            EXEC dbo.CreateColumnAudit @TableId, @Name, @DataTypeId, @DefaultValue, @NotNull;
+        END
+
     IF dbo.TableColumnExists(@TableId, @Name) = 0
         BEGIN
+            SET @Id = NEWID();
+
             INSERT INTO dbo.TableColumns ( Id, TableId, DataTypeId, Name, DefaultValue, NotNull, IsPrimaryKey
                                          , IsForeignKey, IsForeignDisplayValue, OrdinalPosition, DisplayInGrid
                                          , AlterDate)
-            VALUES ( NEWID(), @TableId, @DataTypeId, @Name, @DefaultValue, @NotNull, @IsPrimaryKey
+            VALUES ( @Id, @TableId, @DataTypeId, @Name, @DefaultValue, @NotNull, @IsPrimaryKey
                    , @IsForeignKey, @IsForeignDisplayValue, dbo.GetColumnOrdinal(@TableId, @Name), @DisplayInGrid
                    , @CurrentDate)
         END
@@ -83,8 +92,15 @@ CREATE OR ALTER PROCEDURE dbo.UpdateTableColumn(
 AS
 BEGIN
     BEGIN TRANSACTION ;
-    DECLARE @CurrentDate DATETIME2 = SYSDATETIME();
+    DECLARE @CurrentDate DATETIME2 = SYSDATETIME(), @WithAudits BIT = 0;
     EXEC dbo.AlterColumn @Id, @TableId, @Name, @DefaultValue, @DataTypeId, @NotNull;
+
+    SELECT @WithAudits = WithAudits FROM Tables WHERE Id = @TableId
+    IF @WithAudits = 1
+        BEGIN
+            EXEC dbo.AlterColumnAudit @Id, @TableId, @Name, @DefaultValue, @DataTypeId, @NotNull;
+        END
+
     IF dbo.TableColumnExists(@TableId, @Name) = 1
         BEGIN
             UPDATE dbo.TableColumns
@@ -112,6 +128,13 @@ AS
 BEGIN
     BEGIN TRANSACTION ;
     EXEC dbo.DropColumn @Id;
+
+    DECLARE @WithAudits BIT = (SELECT WithAudits FROM Tables WHERE Id = @TableId);
+    IF @WithAudits = 1
+        BEGIN
+            EXEC dbo.DropColumnAudit @Id;
+        END
+
     IF dbo.TableColumnExists(@TableId, @Id) = 1
         BEGIN
             DELETE

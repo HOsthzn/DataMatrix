@@ -1,7 +1,6 @@
 USE DataMatrix
 GO
 
--- Check if the schema already exists
 CREATE OR ALTER FUNCTION dbo.SysSchemaExists(@SchemaName VARCHAR(256))
     RETURNS BIT
 AS
@@ -16,9 +15,6 @@ BEGIN
 END
 GO
 
-
-
--- Create a new schema
 CREATE OR ALTER PROCEDURE dbo.CreateSchema(
     @Name VARCHAR(256)
 )
@@ -32,7 +28,13 @@ BEGIN
 END
 GO
 
--- Rename a schema
+CREATE OR ALTER PROCEDURE dbo.CreateSchemaAudit(@Name VARCHAR(256)) AS
+BEGIN
+    SET @Name = CONCAT(@Name, '_Audit')
+    EXEC dbo.CreateSchema @Name
+END
+GO
+
 CREATE OR ALTER PROCEDURE dbo.RenameSchema(
     @Id NVARCHAR(128),
     @NewName VARCHAR(256)
@@ -54,7 +56,13 @@ BEGIN
 END
 GO
 
--- Drop a schema
+CREATE OR ALTER PROCEDURE dbo.RenameSchemaAudit(@Id NVARCHAR(128), @NewName VARCHAR(256)) AS
+BEGIN
+    SET @NewName = CONCAT(@NewName, '_Audit')
+    EXEC dbo.RenameSchema @Id, @NewName
+END
+GO
+
 CREATE OR ALTER PROCEDURE dbo.DropSchema(@Id NVARCHAR(128))
 AS
 BEGIN
@@ -85,3 +93,9 @@ BEGIN
         END
 END
 GO
+
+CREATE OR ALTER PROCEDURE dbo.DropSchemaAudit(@Id NVARCHAR(128)) AS
+BEGIN
+    SET @Id = CONCAT(@Id, '_Audit')
+    EXEC dbo.DropSchema @Id
+END

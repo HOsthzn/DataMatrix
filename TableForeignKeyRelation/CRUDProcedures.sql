@@ -26,7 +26,6 @@ BEGIN
     FROM dbo.TableForeignKeyRelation
     WHERE ForeignColumnId = @FromColumn
       AND PrimaryColumnId = @ToColumn
-
     RETURN @Result;
 END
 GO
@@ -37,24 +36,32 @@ AS
 BEGIN
     DECLARE @Result VARCHAR(256);
 
-    SELECT @Result = CONCAT(FT.Name, '_', FTC.Name, '_', PT.Name, '_', PTC.Name, '_fk')
-    FROM TableForeignKeyRelation AS TFKR
-             INNER JOIN dbo.TableColumns AS FTC ON FTC.Id = TFKR.ForeignColumnId
-             INNER JOIN dbo.Tables AS FT ON FT.Id = FTC.TableId
-             INNER JOIN dbo.TableColumns AS PTC ON FTC.Id = TFKR.PrimaryColumnId
-             INNER JOIN dbo.Tables AS PT ON PT.Id = PTC.TableId
+    --from table
+
+    SELECT @Result = CONCAT(T.Name, '_', TC.Name, '_')
+    FROM dbo.TableColumns AS TC
+             INNER JOIN Tables AS T ON T.Id = TC.TableId
+    WHERE TC.Id = @FromColumn
+
+    --to table
+
+    SELECT @Result += CONCAT(T.Name, '_', TC.Name)
+    FROM dbo.TableColumns AS TC
+             INNER JOIN Tables AS T ON T.Id = TC.TableId
+    WHERE TC.Id = @ToColumn
+
+    set @Result += '_fk';
     RETURN @Result;
 END
 GO
 
-CREATE OR ALTER PROCEDURE InsertTableForeignKeyRelation(@FromColumn NVARCHAR(128), @ToColumn NVARCHAR(128),
+CREATE OR ALTER PROCEDURE InsertTableForeignKeyRelation(@Name VARCHAR(256), @FromColumn NVARCHAR(128),
+                                                        @ToColumn NVARCHAR(128),
                                                         @Id NVARCHAR(128) OUTPUT)
 AS
 BEGIN
     BEGIN TRANSACTION;
     DECLARE @CurrentDate DATETIME2 = SYSDATETIME();
-    DECLARE @Name VARCHAR(256) = dbo.GetForeignKeyRelationName(@FromColumn, @ToColumn)
-    -- TODO call CreateFK procedure
     IF dbo.ForeignKeyRelationExists(@Name) = 0
         BEGIN
             SET @Id = NEWID();
@@ -72,7 +79,6 @@ AS
 BEGIN
     BEGIN TRANSACTION;
     DECLARE @CurrentDate DATETIME2 = SYSDATETIME();
-    -- TODO call AlterFK procedure
     IF dbo.ForeignKeyRelationExists(@Id) = 1
         BEGIN
             UPDATE dbo.TableForeignKeyRelation
@@ -90,7 +96,6 @@ CREATE OR ALTER PROCEDURE DeleteTableForeignKeyRelation(@Id NVARCHAR(128))
 AS
 BEGIN
     BEGIN TRANSACTION;
-    -- TODO call DropFK procedure
     IF dbo.ForeignKeyRelationExists(@Id) = 1
         BEGIN
             DELETE

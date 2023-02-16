@@ -44,10 +44,9 @@ BEGIN
 
             DECLARE @sql NVARCHAR(MAX);
 
-            SET @sql = CONCAT('ALTER TABLE [', QUOTENAME(@SchemaName), '].[', QUOTENAME(@TableName), '] ADD [',
-                              QUOTENAME(@Name), '] ',
-                              dbo.GetSQLDataType(@DataTypeId),
-                              IIF(@Default IS NULL, '', CONCAT(' DEFAULT ', QUOTENAME(@Default))),
+            SET @sql = CONCAT('ALTER TABLE [', @SchemaName, '].[', @TableName, '] ADD [',
+                              @Name, '] ', dbo.GetSQLDataType(@DataTypeId),
+                              IIF(@Default IS NULL, '', CONCAT(' DEFAULT ', @Default)),
                               IIF(@NotNull = 0, '', ' NOT NULL'), ';');
 
             EXEC [dbo].[ExecuteDynamicSQL] @sql;
@@ -168,6 +167,7 @@ BEGIN
     FROM dbo.TableColumns AS TC
              INNER JOIN Tables AS T ON T.Id = TC.TableId
              INNER JOIN dbo.Schemas AS S ON S.Id = T.SchemaId
+    WHERE TC.Id = @Id;
 
     IF [dbo].[SysColumnExists](@TableId, @ColName) = 1
         BEGIN
@@ -186,6 +186,7 @@ BEGIN
     FROM dbo.TableColumns AS TC
              INNER JOIN Tables AS T ON T.Id = TC.TableId
              INNER JOIN dbo.Schemas AS S ON S.Id = T.SchemaId
+    WHERE TC.Id = @Id;
 
     IF [dbo].[SysColumnExists](@TableId, @ColName) = 1
         BEGIN

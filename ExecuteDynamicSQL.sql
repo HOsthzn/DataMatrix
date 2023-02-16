@@ -3,6 +3,9 @@ CREATE OR ALTER PROCEDURE [dbo].[ExecuteDynamicSQL](
 ) AS
 BEGIN
     BEGIN TRY
+        --if @sql does not end with ; add it
+        IF SUBSTRING(@sql, LEN(@sql), 1) <> ';'
+            SET @sql = @sql + ';';
         PRINT @SQL;
         EXEC (@sql);
     END TRY

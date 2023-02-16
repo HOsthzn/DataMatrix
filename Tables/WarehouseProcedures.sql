@@ -47,7 +47,7 @@ CREATE OR ALTER PROCEDURE dbo.CreateTableAudit(
     @Name VARCHAR(256)
 ) AS
 BEGIN
-    IF dbo.SysTableExists(@SchemaId, @Name) = 0
+    IF dbo.SysTableExists(@SchemaId, @Name) = 1
         BEGIN
             DECLARE @SchemaName VARCHAR(256);
             SELECT @SchemaName = CONCAT(Name, '_Audit')
@@ -111,9 +111,9 @@ BEGIN
     FROM dbo.Tables AS T
              INNER JOIN Schemas AS S ON S.Id = T.SchemaId
     WHERE T.Id = @Id;
-    IF dbo.SysTableExists(@SchemaId, @TableName) = 0
+    IF dbo.SysTableExists(@SchemaId, @TableName) = 1
         BEGIN
-            DECLARE @sql NVARCHAR(MAX) = N'DROP TABLE [' + @SchemaName + '].[' + @TableName + ']';
+            DECLARE @sql NVARCHAR(MAX) = N'DROP TABLE IF EXISTS [' + @SchemaName + '].[' + @TableName + ']';
             EXEC [dbo].[ExecuteDynamicSQL] @sql;
         END
 END
@@ -129,9 +129,10 @@ BEGIN
     FROM dbo.Tables AS T
              INNER JOIN Schemas AS S ON S.Id = T.SchemaId
     WHERE T.Id = @Id;
-    IF dbo.SysTableExists(@SchemaId, @TableName) = 0
+    IF dbo.SysTableExists(@SchemaId, @TableName) = 1
         BEGIN
-            DECLARE @sql NVARCHAR(MAX) = N'DROP TABLE [' + @SchemaName + '].[' + @TableName + ']';
+            DECLARE @sql NVARCHAR(MAX) = N'DROP TABLE IF EXISTS [' + @SchemaName + '].[' + @TableName + ']';
             EXEC [dbo].[ExecuteDynamicSQL] @sql;
         END
 END
+GO

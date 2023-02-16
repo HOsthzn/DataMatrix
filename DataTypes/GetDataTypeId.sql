@@ -1,0 +1,11 @@
+CREATE OR ALTER FUNCTION GetDataTypeId(@Code VARCHAR(256))
+    RETURNS NVARCHAR(128)
+AS
+BEGIN
+    DECLARE @DataTypeId NVARCHAR(128)
+
+    SELECT @DataTypeId = Id FROM dbo.DataTypes WHERE LOWER(Code) = LOWER(@Code)
+
+    RETURN @DataTypeId;
+END
+GO

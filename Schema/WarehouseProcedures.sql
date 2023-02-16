@@ -74,21 +74,7 @@ BEGIN
 
     IF dbo.SysSchemaExists(@Name) = 1
         BEGIN
-
-            DECLARE @sql NVARCHAR(MAX) = 'SELECT ''DROP TABLE [' + @Name + '].['' + name + '']'' AS sql
-                                          FROM sys.tables
-                                          WHERE schema_id = SCHEMA_ID(@Name)';
-
-            EXEC dbo.ExecuteDynamicSQL @sql;
-
-            -- drop all views in the schema
-            SET @sql = 'SELECT ''DROP VIEW [' + @Name + '].['' + name + '']'' AS sql
-                        FROM sys.views
-                        WHERE schema_id = SCHEMA_ID(@Name)';
-
-            EXEC dbo.ExecuteDynamicSQL @sql;
-
-            SET @sql = 'DROP SCHEMA [' + @Name + ']';
+            DECLARE @sql NVARCHAR(MAX) = 'DROP SCHEMA [' + @Name + ']';
             EXEC dbo.ExecuteDynamicSQL @sql;
         END
 END
@@ -96,6 +82,11 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.DropSchemaAudit(@Id NVARCHAR(128)) AS
 BEGIN
-    SET @Id = CONCAT(@Id, '_Audit')
-    EXEC dbo.DropSchema @Id
+    DECLARE @Name VARCHAR(256)
+    SELECT @Name = CONCAT(Name, '_Audit')
+    FROM dbo.Schemas
+    WHERE Id = @Id;
+
+    DECLARE @sql NVARCHAR(MAX) = 'DROP SCHEMA [' + @Name + ']';
+    EXEC dbo.ExecuteDynamicSQL @sql;
 END

@@ -1,4 +1,4 @@
-create table dbo.
+create table dbo.DataTypes
 (
     Id             nvarchar(128) not null
         constraint PK_DataTypes

@@ -28,13 +28,6 @@ BEGIN
 END
 GO
 
-CREATE OR ALTER PROCEDURE dbo.CreateSchemaAudit(@Name VARCHAR(256)) AS
-BEGIN
-    SET @Name = CONCAT(@Name, '_Audit')
-    EXEC dbo.CreateSchema @Name
-END
-GO
-
 CREATE OR ALTER PROCEDURE dbo.RenameSchema(
     @Id NVARCHAR(128),
     @NewName VARCHAR(256)
@@ -56,13 +49,6 @@ BEGIN
 END
 GO
 
-CREATE OR ALTER PROCEDURE dbo.RenameSchemaAudit(@Id NVARCHAR(128), @NewName VARCHAR(256)) AS
-BEGIN
-    SET @NewName = CONCAT(@NewName, '_Audit')
-    EXEC dbo.RenameSchema @Id, @NewName
-END
-GO
-
 CREATE OR ALTER PROCEDURE dbo.DropSchema(@Id NVARCHAR(128))
 AS
 BEGIN
@@ -79,14 +65,3 @@ BEGIN
         END
 END
 GO
-
-CREATE OR ALTER PROCEDURE dbo.DropSchemaAudit(@Id NVARCHAR(128)) AS
-BEGIN
-    DECLARE @Name VARCHAR(256)
-    SELECT @Name = CONCAT(Name, '_Audit')
-    FROM dbo.Schemas
-    WHERE Id = @Id;
-
-    DECLARE @sql NVARCHAR(MAX) = 'DROP SCHEMA [' + @Name + ']';
-    EXEC dbo.ExecuteDynamicSQL @sql;
-END

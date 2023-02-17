@@ -32,7 +32,7 @@ INSERT INTO DataTypes (Id, Name, Code, Type, Description, Size, DateTimeFormat, 
 INSERT INTO DataTypes (Id, Name, Code, Type, Description, Size, DateTimeFormat, MaxValue, MinValue) VALUES (newid(), N'INTEGER', N'INT', N'INT', N'DEFAULT INT TYPE', null, null, null, null);
 INSERT INTO DataTypes (Id, Name, Code, Type, Description, Size, DateTimeFormat, MaxValue, MinValue) VALUES (newid(), N'DECIMAL', N'DEC', N'DECIMAL', N'DEFAULT DECIMAL TYPE', N'18,6', null, null, null);
 INSERT INTO DataTypes (Id, Name, Code, Type, Description, Size, DateTimeFormat, MaxValue, MinValue) VALUES (newid(), N'Phone Number', N'PNUM', N'NVARCHAR', N'DEFAULT phone number VALUE', N'MAX', null, null, null);
-INSERT INTO DataTypes (Id, Name, Code, Type, Description, Size, DateTimeFormat, MaxValue, MinValue) VALUES (newid(), N'DATETIME', N'DT', N'DATETIME', N'DEFAULT DATETIME TYPE', null, N'DD-MM-YYYY HH:MM', null, null);
+INSERT INTO DataTypes (Id, Name, Code, Type, Description, Size, DateTimeFormat, MaxValue, MinValue) VALUES (newid(), N'DATETIME', N'DT', N'DATETIME2', N'DEFAULT DATETIME TYPE', null, N'DD-MM-YYYY HH:MM', null, null);
 INSERT INTO DataTypes (Id, Name, Code, Type, Description, Size, DateTimeFormat, MaxValue, MinValue) VALUES (newid(), N'DESCRIPTION', N'DESC', N'VARCHAR', N'DEFAULT DESCRIPTION VALUE', N'MAX', null, null, null);
 INSERT INTO DataTypes (Id, Name, Code, Type, Description, Size, DateTimeFormat, MaxValue, MinValue) VALUES (newid(), N'Email', N'EMAIL', N'NVARCHAR', N'DEFAULT email VALUE', N'256', null, null, null);
 INSERT INTO DataTypes (Id, Name, Code, Type, Description, Size, DateTimeFormat, MaxValue, MinValue) VALUES (newid(), N'PRIMARY KEY/FOREIGN KEY', N'PK', N'NVARCHAR', N'DEFAULT PRIMARY KEY TYPE', N'128', null, null, null);

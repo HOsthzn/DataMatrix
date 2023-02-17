@@ -49,7 +49,8 @@ GO
 
 -- Procedure to insert a table column
 CREATE OR ALTER PROCEDURE dbo.InsertTableColumn(@TableId NVARCHAR(128), @DataTypeId NVARCHAR(128), @Name VARCHAR(256),
-                                                @DefaultValue NVARCHAR(MAX), @NotNull BIT = 0, @IsPrimaryKey BIT = 0,
+                                                @DefaultValue NVARCHAR(MAX), @Checks NVARCHAR(MAX), @NotNull BIT = 0,
+                                                @IsPrimaryKey BIT = 0,
                                                 @IsForeignKey BIT = 0, @IsForeignDisplayValue BIT = 0,
                                                 @DisplayInGrid BIT = 0, @Id NVARCHAR(128) OUTPUT
 )
@@ -59,10 +60,10 @@ BEGIN
     IF dbo.TableColumnExists(@TableId, @Name) = 0
         BEGIN
             SET @Id = NEWID();
-            INSERT INTO dbo.TableColumns ( Id, TableId, DataTypeId, Name, DefaultValue, NotNull, IsPrimaryKey
+            INSERT INTO dbo.TableColumns ( Id, TableId, DataTypeId, Name, DefaultValue, Checks, NotNull, IsPrimaryKey
                                          , IsForeignKey, IsForeignDisplayValue, OrdinalPosition, DisplayInGrid
                                          , AlterDate)
-            VALUES ( @Id, @TableId, @DataTypeId, @Name, @DefaultValue, @NotNull, @IsPrimaryKey
+            VALUES ( @Id, @TableId, @DataTypeId, @Name, @DefaultValue, @Checks, @NotNull, @IsPrimaryKey
                    , @IsForeignKey, @IsForeignDisplayValue, dbo.GetColumnOrdinal(@TableId, @Name), @DisplayInGrid
                    , @CurrentDate)
         END
@@ -73,7 +74,7 @@ GO
 CREATE OR ALTER PROCEDURE dbo.UpdateTableColumn(
     @Id NVARCHAR(128),
     @TableId NVARCHAR(128),
-    @DataTypeId NVARCHAR(128), @Name VARCHAR(256),
+    @DataTypeId NVARCHAR(128), @Checks NVARCHAR(MAX), @Name VARCHAR(256),
     @DefaultValue NVARCHAR(MAX), @NotNull BIT = 0, @IsPrimaryKey BIT = 0,
     @IsForeignKey BIT = 0, @IsForeignDisplayValue BIT = 0,
     @DisplayInGrid BIT = 0
@@ -87,6 +88,7 @@ BEGIN
             SET DataTypeId            = @DataTypeId
               , Name                  = @Name
               , DefaultValue          = @DefaultValue
+              , Checks                = @Checks
               , NotNull               = @NotNull
               , IsPrimaryKey          = @IsPrimaryKey
               , IsForeignKey          = @IsForeignKey

@@ -26,7 +26,8 @@ BEGIN
     EXEC dbo.CreateSchema @Name;
     EXEC dbo.InsertSchema @Name, @Id OUTPUT;
 
-    EXEC InitializeSchemaFileUpload @Id;
+    EXEC dbo.InitializeSchemaFileUpload @Id;
+    EXEC dbo.InitializeSchemaIntegration @Id;
     COMMIT;
 END
 GO

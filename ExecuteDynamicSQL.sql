@@ -20,5 +20,4 @@ BEGIN
 
         RAISERROR (@errorMessage, @errorSeverity, @errorState);
     END CATCH
-
 END

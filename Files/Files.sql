@@ -1,3 +1,6 @@
+USE DataMatrix
+GO
+
 CREATE OR ALTER PROCEDURE [dbo].[InitializeSchemaFileUpload](@SchemaId NVARCHAR(128))
 AS
 BEGIN
@@ -22,9 +25,9 @@ BEGIN
     SET @varMax = dbo.GetDataTypeId('desc');
     SET @DateTime = dbo.GetDataTypeId('Dt');
 
-    EXEC dbo.InitializeTableColumn @TableId, 'Name', @var256, NULL, 1, 0, 0, 1, 1, @ColumnId OUTPUT;
-    EXEC dbo.InitializeTableColumn @TableId, 'Directory', @varMax, NULL, 1, 0, 0, 0, 1, @ColumnId OUTPUT;
-    EXEC dbo.InitializeTableColumn @TableId, 'AlterDate', @DateTime, 'GETDATE()', 1, 0, 0, 0, 1, @ColumnId OUTPUT;
+    EXEC dbo.InitializeTableColumn @TableId, 'Name', @var256, NULL, NULL, 1, 0, 0, 1, 1, @ColumnId OUTPUT;
+    EXEC dbo.InitializeTableColumn @TableId, 'Directory', @varMax, NULL, NULL, 1, 0, 0, 0, 1, @ColumnId OUTPUT;
+    EXEC dbo.InitializeTableColumn @TableId, 'AlterDate', @DateTime, 'GETDATE()', NULL, 1, 0, 0, 0, 1, @ColumnId OUTPUT;
 END
 GO
 
@@ -40,9 +43,9 @@ BEGIN
     SET @DateTime = dbo.GetDataTypeId('Dt');
     SET @int = dbo.GetDataTypeId('int');
 
-    EXEC dbo.InitializeTableColumn @TableId, 'FileId', @int, NULL, 1, 0, 1, 0, 1, @fromColId OUTPUT;
-    EXEC dbo.InitializeTableColumn @TableId, 'Name', @var256, NULL, 1, 0, 0, 0, 1, @ColumnId OUTPUT;
-    EXEC dbo.InitializeTableColumn @TableId, 'AlterDate', @DateTime, 'GETDATE()', 1, 0, 0, 0, 1, @ColumnId OUTPUT;
+    EXEC dbo.InitializeTableColumn @TableId, 'FileId', @int, NULL, NULL, 1, 0, 1, 0, 1, @fromColId OUTPUT;
+    EXEC dbo.InitializeTableColumn @TableId, 'Name', @var256, NULL, NULL, 1, 0, 0, 0, 1, @ColumnId OUTPUT;
+    EXEC dbo.InitializeTableColumn @TableId, 'AlterDate', @DateTime, 'GETDATE()', NULL, 1, 0, 0, 0, 1, @ColumnId OUTPUT;
 
     SELECT @toColId = TC.Id
     FROM dbo.TableColumns AS TC
@@ -70,10 +73,10 @@ BEGIN
     SET @DateTime = dbo.GetDataTypeId('Dt');
     SET @int = dbo.GetDataTypeId('int');
 
-    EXEC dbo.InitializeTableColumn @TableId, 'FileTabId', @int, NULL, 1, 0, 1, 0, 1, @fromColId OUTPUT;
-    EXEC dbo.InitializeTableColumn @TableId, 'Name', @var256, NULL, 1, 0, 0, 0, 1, @ColumnId OUTPUT;
-    EXEC dbo.InitializeTableColumn @TableId, 'OrdinalPosition', @int, NULL, 1, 0, 0, 0, 1, @ColumnId OUTPUT;
-    EXEC dbo.InitializeTableColumn @TableId, 'AlterDate', @DateTime, 'GETDATE()', 1, 0, 0, 0, 1, @ColumnId OUTPUT;
+    EXEC dbo.InitializeTableColumn @TableId, 'FileTabId', @int, NULL, NULL, 1, 0, 1, 0, 1, @fromColId OUTPUT;
+    EXEC dbo.InitializeTableColumn @TableId, 'Name', @var256, NULL, NULL, 1, 0, 0, 0, 1, @ColumnId OUTPUT;
+    EXEC dbo.InitializeTableColumn @TableId, 'OrdinalPosition', @int, NULL, NULL, 1, 0, 0, 0, 1, @ColumnId OUTPUT;
+    EXEC dbo.InitializeTableColumn @TableId, 'AlterDate', @DateTime, 'GETDATE()', NULL, 1, 0, 0, 0, 1, @ColumnId OUTPUT;
 
     SELECT @toColId = TC.Id
     FROM dbo.TableColumns AS TC
@@ -100,8 +103,9 @@ BEGIN
     SET @Pk = dbo.GetDataTypeId('pk');
     SET @int = dbo.GetDataTypeId('int');
 
-    EXEC dbo.InitializeTableColumn @TableId, 'FileTabColumnId', @int, NULL, 1, 0, 1, 0, 1, @FileTabColumnId OUTPUT;
-    EXEC dbo.InitializeTableColumn @TableId, 'TableColumnId', @Pk, NULL, 1, 0, 1, 0, 1, @TableColumnId OUTPUT;
+    EXEC dbo.InitializeTableColumn @TableId, 'FileTabColumnId', @int, NULL, NULL, 1, 0, 1, 0, 1,
+         @FileTabColumnId OUTPUT;
+    EXEC dbo.InitializeTableColumn @TableId, 'TableColumnId', @Pk, NULL, NULL, 1, 0, 1, 0, 1, @TableColumnId OUTPUT;
 
     SELECT @toColId = TC.Id
     FROM dbo.TableColumns AS TC

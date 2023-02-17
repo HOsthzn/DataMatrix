@@ -38,7 +38,7 @@ BEGIN
 
     -- add the Id col to the Columns table
     DECLARE @colId NVARCHAR(128), @DataTypeId NVARCHAR(128) = dbo.GetDataTypeId('int');
-    EXEC dbo.InsertTableColumn @Id, @DataTypeId, 'Id', NULL, 1, 1, 0, 0, 0, @colId OUTPUT
+    EXEC dbo.InsertTableColumn @Id, @DataTypeId, 'Id', NULL, NULL, 1, 1, 0, 0, 0, @colId OUTPUT
 
     COMMIT;
 END

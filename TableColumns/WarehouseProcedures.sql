@@ -28,7 +28,8 @@ END
 GO
 
 CREATE OR ALTER PROCEDURE dbo.CreateColumn(@TableId NVARCHAR(128), @Name NVARCHAR(128),
-                                           @DataTypeId NVARCHAR(128), @Default NVARCHAR(MAX) = NULL, @NotNull BIT = 0)
+                                           @DataTypeId NVARCHAR(128), @Default NVARCHAR(MAX) = NULL,
+                                           @Checks NVARCHAR(MAX) = NULL, @NotNull BIT = 0)
 AS
 BEGIN
     IF [dbo].[SysColumnExists](@TableId, @Name) = 0
@@ -47,7 +48,8 @@ BEGIN
             SET @sql = CONCAT('ALTER TABLE [', @SchemaName, '].[', @TableName, '] ADD [',
                               @Name, '] ', dbo.GetSQLDataType(@DataTypeId),
                               IIF(@Default IS NULL, '', CONCAT(' DEFAULT ', @Default)),
-                              IIF(@NotNull = 0, '', ' NOT NULL'), ';');
+                              IIF(@NotNull = 0, '', ' NOT NULL '),
+                              IIF(@Checks IS NULL, '', CONCAT(' CHECK(', @Name, ' LIKE ''', QUOTENAME(@Checks),''')')), ';');
 
             EXEC [dbo].[ExecuteDynamicSQL] @sql;
         END
@@ -56,7 +58,8 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.AlterColumn(@Id NVARCHAR(128), @TableId NVARCHAR(128),
                                           @Name NVARCHAR(128), @Default NVARCHAR(MAX) = NULL,
-                                          @DataTypeId NVARCHAR(128) = NULL, @NotNull BIT = 0)
+                                          @DataTypeId NVARCHAR(128) = NULL, @Checks NVARCHAR(MAX) = NULL,
+                                          @NotNull BIT = 0)
 AS
 BEGIN
     IF [dbo].[SysColumnExists](@TableId, @Name) = 1
@@ -78,7 +81,8 @@ BEGIN
                               '] ALTER COLUMN [',
                               QUOTENAME(@Name), '] ', dbo.GetSQLDataType(@DataTypeId),
                               IIF(@Default IS NULL, '', CONCAT(' DEFAULT ', QUOTENAME(@Default))),
-                              IIF(@NotNull = 0, '', ' NOT NULL'), ';');
+                              IIF(@NotNull = 0, '', ' NOT NULL '),
+                              IIF(@Checks IS NULL, '', CONCAT(' CHECK(', @Name, ' LIKE ''', QUOTENAME(@Checks),''')')), ';');
 
             IF @Rename = 1
                 BEGIN

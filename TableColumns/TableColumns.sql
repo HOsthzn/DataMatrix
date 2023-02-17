@@ -20,6 +20,7 @@ IF NOT EXISTS(SELECT *
                     ON DELETE CASCADE,
             Name                  VARCHAR(256)                NOT NULL,
             DefaultValue          NVARCHAR(MAX),
+            [Checks]              NVARCHAR(MAX) ,
             NotNull               BIT       DEFAULT 0         NOT NULL,
             IsPrimaryKey          BIT       DEFAULT 0         NOT NULL,
             IsForeignKey          BIT       DEFAULT 0         NOT NULL,
@@ -39,14 +40,14 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.InitializeTableColumn(@TableId NVARCHAR(128), @Name VARCHAR(256),
                                                     @DataTypeId NVARCHAR(128),
-                                                    @Default NVARCHAR(MAX), @NotNull BIT, @IsPrimaryKey BIT,
+                                                    @Default NVARCHAR(MAX), @Checks nvarchar(MAX), @NotNull BIT, @IsPrimaryKey BIT,
                                                     @IsForeignKey BIT, @IsForeignDisplayValue BIT,
                                                     @DisplayInGrid BIT, @Id NVARCHAR(128) OUTPUT)
 AS
 BEGIN
     BEGIN TRANSACTION;
-    EXEC dbo.CreateColumn @TableId, @Name, @DataTypeId, @Default, @NotNull;
-    EXEC dbo.InsertTableColumn @TableId, @DataTypeId, @Name, @Default, @NotNull, @IsPrimaryKey, @IsForeignKey,
+    EXEC dbo.CreateColumn @TableId, @Name, @DataTypeId, @Default, @Checks, @NotNull;
+    EXEC dbo.InsertTableColumn @TableId, @DataTypeId, @Name, @Default, @Checks, @NotNull, @IsPrimaryKey, @IsForeignKey,
          @IsForeignDisplayValue, @DisplayInGrid, @Id OUTPUT;
     COMMIT;
 END
